@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" height="113.2px" width="104.05px" xmlns="http://www.w3.org/2000/svg">
+  <g transform="matrix(1.0, 0.0, 0.0, 1.0, 31.75, 22.1)">
+    <use height="60.35" transform="matrix(1.0, 0.0, 0.0, 1.0, -28.7, 4.2)" width="101.0" xlink:href="#shape0"/>
+  </g>
+  <defs>
+    <g id="shape0" transform="matrix(1.0, 0.0, 0.0, 1.0, 28.7, -4.2)">
+      <path d="M-5.15 30.15 L-5.15 30.25 -5.2 30.15 -5.15 30.15" fill="#464646" fill-rule="evenodd" stroke="none"/>
+      <path d="M45.35 16.15 L72.3 34.65 29.0 16.15 45.35 16.15" fill="#66ff00" fill-rule="evenodd" stroke="none"/>
+      <path d="M14.4 4.2 L21.6 4.2 45.35 16.15 29.0 16.15 14.4 4.2" fill="#66cc00" fill-rule="evenodd" stroke="none"/>
+      <path d="M72.3 34.65 L50.1 47.85 49.1 48.35 29.0 16.15 72.3 34.65 M21.7 64.55 L-5.15 48.85 -28.7 34.65 -15.7 20.7 4.25 8.95 14.4 4.2 29.0 16.15 21.7 64.55 M-5.15 30.25 L-5.15 48.85 13.0 25.85 4.25 8.95 -5.15 30.15 -5.2 30.15 -5.15 30.25" fill="#8a9900" fill-rule="evenodd" stroke="none"/>
+      <path d="M49.1 48.35 L21.7 64.55 29.0 16.15 49.1 48.35 M-5.15 30.15 L4.25 8.95 13.0 25.85 -5.15 48.85 -5.15 30.25 -5.15 30.15" fill="#7ccc00" fill-rule="evenodd" stroke="none"/>
+    </g>
+  </defs>
+</svg>

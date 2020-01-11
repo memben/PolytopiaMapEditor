@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Polytopia Map Editor</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    <!--Made by Atomycon -->
+
+    <script>
+    /*code original from: https://stackoverflow.com/questions/3437786/get-the-size-of-the-screen-current-web-page-and-browser-window
+                          https://stackoverflow.com/questions/2005954/center-a-positionfixed-element
+                          https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_menu_icon_js
+
+     */
+    //list from https://polytopia.fandom.com/wiki/Terrain
+    /* due to scaling issues thirdLayer contains animal/fruits, but is handled internally as two separate layers animalLayer and furitLayer*/
+
+    const tribeList = ["undefined", "xin-xi", "imperius", "bardur", "oumaji", "kickoo", "hoodrick", "luxidoor", "vengir", "zebasi", "ai-Mo", "quetzali", "yadakk", "aquarion", "elyrion", /*"polaris"*/]; //undefined is not a tribe
+    const mainTerrain = ["ocean", "water", "field", "mountain"];
+    //const mainTerrainTribeSpecific = [false, false, true, true]; //graphic differ from tribe to tribe
+
+    const oceanTerrain = ["finish", "ruin", "whale", "fish"]; //whale vanishes if ruin is on
+    const oceanTerrainTribeSpecific = [false, false, false, false]; //graphic differ from tribe to tribe
+    const oceanTerrainElementLayer = [-1, 4, 2, 2]; //doesnt have a layer, specialLayer, secondLayer
+
+    const waterTerrain = ["finish", "fish", "whale"];
+    const waterTerrainTribeSpecific = [false, false, false]; //graphic differ from tribe to tribe
+    const waterTerrainElementLayer = [-1, 2, 2]; //doesnt have a layer, secondLayer, secondLayer
+
+    const fieldTerrain = ["finish", "ruin", "village", "fruit", "crop", "forest", "animal"]; // animal automatically goes with a forest
+    const fieldTerrainTribeSpecific = [false, false, false, true, false, true, true]; //graphic differ from tribe to tribe
+    const fieldTerrainElementLayer = [-1, 4, 4, 3, 2, 2, 3]; //doesnt have a layer, specialLayer, specialLayer, thirdLayer, secondLayer, secondLayer, thirdLayer
+
+    const mountainTerrain = ["finish", "ruin", "metal" ]; //metal vanishes if ruin is on
+    const mountainTerrainTribeSpecific = [false, false, false]; //graphic differ from tribe to tribe
+    const mountainTerrainElementLayer = [-1, 4, 2]; //doesnt have a layer, specialLayer, secondLayer
+
+    const combinedTerrain = [oceanTerrain, waterTerrain, fieldTerrain, mountainTerrain]; //combines all terrains, used for getting values when the terrain is unknown before the method call
+    const combinedTerrainTribeSpecific = [oceanTerrainTribeSpecific, waterTerrainTribeSpecific, fieldTerrainTribeSpecific, mountainTerrainTribeSpecific]; //combines all terrainTribeSpecifics, used for getting values when the terrain is unknown before the method call
+    const combinedTerrainElementLayer = [oceanTerrainElementLayer, waterTerrainElementLayer, fieldTerrainElementLayer, mountainTerrainElementLayer]; //combines all terrainElementLayers, used for getting values when the terrain is unknown before the method call
+
+    let currentTribe = 7; //Luxidoor
+    let mapSize = 11; //11*11 = 121
+    let mapContent = new Array(mapSize*mapSize).fill([2, -1, -1, -1,currentTribe]);//for saving all elements, array is 2D, first dimension represent the mapTile id, in the second dimension saves [mainCode , secondLayerCode, thirdLayerCode, specialLayerCode, tribe]
+    let topLeftBorder = new Array(mapSize); //all mapTiles with a border on the top left
+    let topRightBorder = new Array(mapSize); //all mapTiles with a border on the top right
+    let bottomLeftBorder = new Array(mapSize); //all mapTiles with a border on the bottom left
+    let bottomRightBorder = new Array(mapSize); //all mapTiles with a border on the bottom right
+
+
+    let currentSelectedTile = [-1 /*selected tile*/, -1 /*mainTerrain*/, -1 /*secondLayer*/, -1 /*thirdLayer*/, -1 /*specialLayer (ruin and village)*/]; //to save the current selected tile changes
+
+    let aspectRatioOfTileHeightWidth = 60.4/100.45; //is the aspect ratio of a tiles surface height to it's width
+    let aspectRatioOfTileWidthHeight = 100.45/60.4; //is the aspect ratio of a tiles surface width to it's height
+    let sidebarActive = false;
+    let tribeBarActive = false;
+    let resourceBarActive = false;
+    let sidebarLeft = true;
+    let navBarHeight;
+    let navBarHeightUnit;
+    let mapWidth;
+    let mapHeight;
+
+
+    $(document).ready(function(){ //run when document is ready
+        $("#sidebar").hide();
+        $("#tribeBar").hide();
+        $("#resourceBar").hide();
+
+        createContentPresenter();
+        resizeContent(); //resize all content
+        createMap();
+        changeGraphicsForSelectedTribe();
+
+
+    });
+
+    function resizeContent() {
+        let VHConstant = 7.5;//original vh number
+        let VWConverted = VHConstant*$(window).height()/$(window).width();
+        if(VWConverted > 1/8*100) { //if width is greater than the width of the resourceBar
+            VWConverted = 1/8*100;
+        }
+        resizeContentManual(VWConverted , "vw"); //passes height of navBar, "vw" should remain the same to be also usable on mobile devices
+    }
+
+    function resizeContentManual(p_navBarHeight, p_navBarHeightUnit) { //adjusting size of elements to browser, only called directly when size of navBar has to be changed manually (maybe problems with mobile when opening an input fields)
+        navBarHeight = p_navBarHeight;
+        navBarHeightUnit = p_navBarHeightUnit;
+        let navBar =  $("#navBar");
+        let content = $("#content");
+        let map = $("#map");
+        let sidebar = $("#sidebar");
+        let elementsInSideBar = $(".elementsInSideBar");
+        let tribeBar = $("#tribeBar");
+        let resourceBar =  $("#resourceBar");
+
+        let sideBarIcon = $("#sideBarIcon"); //top left icon
+        let inputOrganisation = $(".inputOrganisation");
+        let mainInput = $("#mainInput");
+        let displayedHead = $("#displayedHead");
+        let contentPresenter = $(".contentPresenter");
+
+
+        let navBarHeightCombined  = navBarHeight + navBarHeightUnit;
+        let marginNavBarItems = 2.5;
+
+        //set height of the navBar, replaces standard from style
+        navBar.css({height: navBarHeightCombined});
+
+        //scale all elements in navBar
+        sideBarIcon.css({height: navBarHeight*0.8 + navBarHeightUnit, width: navBarHeight*0.8 + navBarHeightUnit , marginTop: navBarHeight*0.1 + navBarHeightUnit, marginLeft: marginNavBarItems + "vw", cursor: "pointer"});
+        inputOrganisation.css({height: navBarHeight*0.6 + navBarHeightUnit, width: navBarHeight*1.8 + navBarHeightUnit , marginTop: navBarHeight*0.2 + navBarHeightUnit});
+        mainInput.css({fontSize:navBarHeight*0.4 + navBarHeightUnit, borderBottomWidth: navBarHeight*0.05 + navBarHeightUnit  });
+        displayedHead.css({height: navBarHeight*0.9 + navBarHeightUnit, width: navBarHeight*0.9 + navBarHeightUnit , marginTop: navBarHeight*0.05 + navBarHeightUnit, marginRight: marginNavBarItems + "vw", cursor: "pointer"});
+
+        //get height of window to scale map
+        let windowHeight = $(window).height();
+        let windowWidth  = $(window).width();
+        let navBarHeightInPixel =  navBar.height(); //gets height in pixel
+        let usableHeight = windowHeight - navBarHeightInPixel; //removes height of the navigation Bar
+
+        //set margin to the top, and set height of sidebar to cover 100% of screen height
+        map.css("margin-top", navBarHeightCombined);
+        sidebar.css({marginTop: navBarHeightCombined, height: (100-navBarHeight*windowWidth/windowHeight)*windowHeight/windowWidth + navBarHeightUnit, width: (2*(marginNavBarItems + navBarHeight*0.8) + navBarHeightUnit)});
+        elementsInSideBar.css({height: (navBarHeight*0.8+marginNavBarItems/2) + navBarHeightUnit, width: (navBarHeight*0.8+marginNavBarItems/2) + navBarHeightUnit, marginLeft: marginNavBarItems/4 + "vw", marginRight: marginNavBarItems/4 + "vw", marginBottom: marginNavBarItems/4 + "vw", cursor: "pointer"});
+        tribeBar.css({marginTop: navBarHeightCombined, borderBottomLeftRadius: navBarHeight*0.5+navBarHeightUnit, borderBottomRightRadius: navBarHeight*0.5+navBarHeightUnit});
+
+        //scale contentPresenter
+        contentPresenter.css({height: navBarHeight*2.2 + navBarHeightUnit, width: navBarHeight*2 + navBarHeightUnit, fontSize: navBarHeight*0.2 + navBarHeightUnit});
+
+        //scale resourceBar, connected to contentPresenter
+        resourceBar.css({height: navBarHeight*4.4 + navBarHeightUnit, width: navBarHeight*8 + navBarHeightUnit, borderTopLeftRadius: navBarHeight*0.5+navBarHeightUnit, borderTopRightRadius: navBarHeight*0.5+navBarHeightUnit}); // toDO can be *2.2 when fieldTerrain not displayed
+
+        //scale the map
+
+
+        if(windowWidth*aspectRatioOfTileHeightWidth >= usableHeight) { //landscape, width is wide enough to support (full) windows height
+            mapHeight = usableHeight;
+            mapWidth = usableHeight*aspectRatioOfTileWidthHeight;
+            map.css({height: mapHeight, width: mapWidth});
+        }
+        else if (windowWidth*aspectRatioOfTileHeightWidth < usableHeight){ //height is higher than windowWidth needs, height is multiplied by the aspectRatio to keep dimensions
+            mapHeight = windowWidth*aspectRatioOfTileHeightWidth;
+            mapWidth = windowWidth;
+
+            map.css({height: mapHeight, width: mapWidth});
+
+            let usableSpaceVertical =  windowHeight- mapHeight; //calculates pixels, available to top and bottom with navBarHeight
+            if(usableSpaceVertical - navBarHeightInPixel > 0) { //checks if it is possible to align the content vertical and if yes align in the middle of the page, but not being overlapped with navBar
+                let marginTop = usableSpaceVertical/2; // (50 % of usable height) - (height of the navBar)
+                let marginBottom = usableSpaceVertical - marginTop; // (100% of usable height) - (height of margin top)
+                content.css({marginTop: marginTop, marginBottom: marginBottom});
+            }
+        }
+
+
+       //toDo removed for now   resourceBar.css({width: Math.round(mapDimensions/windowWidth*100+0.49)+"vw"}); //get % width of the screen to define a width for resourceBar
+
+    }
+    function createTribeBarContentPresenter () {
+        let tribeBar = $("#tribeBar");
+        let counter = 0;
+        tribeBar.empty();
+        let horizontalContainer= '<div class="alignElementsHorizontal">'; //for saving contentPresenter in a div
+        for (let i = 1; i < tribeList.length; i++) { //starts with 1 so undefined is not added
+            let tribeName = tribeList[i];
+            counter++;
+            horizontalContainer += (circleAndLabelContent(tribeName + "_head", "head_" + tribeName, tribeName));
+            if(counter % 3 === 0) { //every 3 tribes
+                horizontalContainer += '</div>';
+                tribeBar.append(horizontalContainer);
+                horizontalContainer = '<div class="alignElementsHorizontal">';
+            }
+        }
+        tribeBar.append(horizontalContainer + '</div>');
+
+
+    }
+    function createMainTerrainContentPresenter() {
+        let mainTerrainDiv = $("#mainTerrainDiv");
+        mainTerrainDiv.empty(); //removes all items inside of html
+        let horizontalContainer= '<div class="alignElementsHorizontal">'; //for saving contentPresenter in a div
+        let counter = 0;
+        for (let i = 0; i < mainTerrain.length; i++) {
+            let terrainElement = mainTerrain[i];
+            counter++;
+            if(terrainElement === "ocean" || terrainElement === "water") { //water and ocean are not connected to a specific tribe
+              horizontalContainer += circleAndLabelContent(terrainElement + "_mainTerrain",  terrainElement, terrainElement);
+            }
+            else {
+              horizontalContainer += circleAndLabelContent(terrainElement + "_mainTerrain",  terrainElement + "_" + tribeList[currentTribe] , terrainElement); //tribeList[currentTribe] is luxidoor at the beginning
+            }
+            if( counter % 4 === 0 ) { //every 4 elements
+                horizontalContainer += '</div>';
+                mainTerrainDiv.append(horizontalContainer);
+                horizontalContainer = '<div class="alignElementsHorizontal">';
+            }
+        }
+        mainTerrainDiv.append(horizontalContainer + '</div>');
+        mainTerrainDiv.hide();
+    }
+    function createOceanTerrainContentPresenter() {
+
+        let oceanTerrainDiv = $("#oceanTerrainDiv");
+        oceanTerrainDiv.empty();
+        let horizontalContainer= '<div class="alignElementsReverseHorizontal">'; //for saving contentPresenter in a div
+        let counter = 0;
+        for (let i = 0; i < oceanTerrain.length; i++) {
+            counter++;
+            let terrainElement = oceanTerrain[i];
+            horizontalContainer += circleAndLabelContent(terrainElement  + "_oceanTerrain", terrainElement, terrainElement);
+            if(counter % 4 === 0 ) { //every 4 elements
+                horizontalContainer += '</div>';
+                oceanTerrainDiv.append(horizontalContainer);
+                horizontalContainer = '<div class="alignElementsReverseHorizontal">';
+            }
+        }
+        oceanTerrainDiv.append(horizontalContainer + '</div>');
+        oceanTerrainDiv.hide();
+    }
+    function createWaterTerrainContentPresenter() {
+        let waterTerrainDiv = $("#waterTerrainDiv");
+        waterTerrainDiv.empty();
+        let horizontalContainer = '<div class="alignElementsReverseHorizontal">'; //for saving contentPresenter in a div
+        let counter = 0;
+        for (let i = 0; i < waterTerrain.length; i++) {
+            counter++;
+            let terrainElement = waterTerrain[i];
+            horizontalContainer += circleAndLabelContent(terrainElement + "_waterTerrain", terrainElement, terrainElement);
+            if (counter % 4 === 0) { //every 4 elements
+                horizontalContainer += '</div>';
+                waterTerrainDiv.append(horizontalContainer);
+                horizontalContainer = '<div class="alignElementsReverseHorizontal">';
+            }
+        }
+        waterTerrainDiv.append(horizontalContainer + '</div>');
+        waterTerrainDiv.hide();
+    }
+    function createFieldTerrainContentPresenter() {
+        let fieldTerrainDiv = $("#fieldTerrainDiv");
+        fieldTerrainDiv.empty(); //removes all items inside of html toDO check if needed also check if need to use alignElementsReverseHorizontal
+        let horizontalContainer = '<div class="alignElementsHorizontal">'; //for saving contentPresenter in a div
+        let counter = 0;
+        for (let i = fieldTerrain.length-1; i >= 0; i--) { //used in order to keep fieldTerrain[] structure but put the more used elements (fruit, crop, forest, animal) closer to the bottom (for mobile users better to reach)
+            let terrainElement = fieldTerrain[i];
+            counter++;
+            if(terrainElement === "finish" || terrainElement === "ruin" || terrainElement === "village" || terrainElement === "crop") { //ruin, cities and crops are not connected to a specific tribe
+                horizontalContainer += circleAndLabelContent(terrainElement  + "_fieldTerrain",  terrainElement, terrainElement);
+            }
+            else {
+                horizontalContainer += circleAndLabelContent(terrainElement + "_fieldTerrain",  terrainElement + "_" + tribeList[currentTribe] , terrainElement); //tribeList[currentTribe] is luxidoor at the beginning
+            }
+            if (counter % 4 === 0) { //every 4 elements
+                horizontalContainer += '</div>';
+                fieldTerrainDiv.append(horizontalContainer);
+                horizontalContainer = '<div class="alignElementsHorizontal">';
+            }
+        }
+        fieldTerrainDiv.append(horizontalContainer + '</div>');
+        fieldTerrainDiv.hide();
+    }
+    function createMountainTerrainContentPresenter() {
+        let mountainTerrainDiv = $("#mountainTerrainDiv");
+        mountainTerrainDiv.empty(); //removes all items inside of html toDO check if needed
+        let horizontalContainer = '<div class="alignElementsReverseHorizontal">'; //for saving contentPresenter in a div
+        let counter = 0;
+        for (let i = 0; i < mountainTerrain.length; i++) {
+            counter++;
+            let terrainElement = mountainTerrain[i];
+            if(terrainElement === "finish" || terrainElement === "ruin" || terrainElement === "metal") { //ruin, cities and crops are not connected to a specific tribe
+                horizontalContainer += circleAndLabelContent(terrainElement  + "_mountainTerrain",  terrainElement, terrainElement);
+            }
+            else {
+                horizontalContainer += circleAndLabelContent(terrainElement + "_mountainTerrain",  terrainElement + "_" + tribeList[currentTribe] , terrainElement); //tribeList[currentTribe] is luxidoor at the beginning
+            }
+            if (counter % 4 === 0) { //every 4 elements
+                horizontalContainer += '</div>';
+                mountainTerrainDiv.append(horizontalContainer);
+                horizontalContainer = '<div class="alignElementsReverseHorizontal">';
+            }
+        }
+        mountainTerrainDiv.append(horizontalContainer + '</div>');
+        mountainTerrainDiv.hide();
+    }
+    function createContentPresenter() { //create the ContentPresenter Items
+        createTribeBarContentPresenter();
+        renewContentPresenter();
+    }
+    function renewContentPresenter() {
+        createMainTerrainContentPresenter();
+        createOceanTerrainContentPresenter();
+        createWaterTerrainContentPresenter();
+        createFieldTerrainContentPresenter();
+        createMountainTerrainContentPresenter();
+        addContentPresenterAction();
+        $(".contentPresenter").css({height: navBarHeight*2.2 + navBarHeightUnit, width: navBarHeight*2 + navBarHeightUnit, fontSize: navBarHeight*0.2 + navBarHeightUnit});
+    }
+    function addContentPresenterAction() { //toDo check if listener gets removed
+        $(".contentPresenter").on({ //actions for contentPresenter
+            click: function(){
+                let id = $(this).attr('id') ;
+                contentPresenterActionOrganizer(id);
+                document.getElementById(id+ "Circle").setAttribute('r', '40%');
+                setTimeout(function() {
+                    document.getElementById(id+ "Circle").setAttribute('r', '42.5%');
+                }, 100);
+            },
+            mouseenter: function(){
+                let id = $(this).attr('id') + "Circle";
+                document.getElementById(id).setAttribute('r', '42.5%');
+            },
+            mouseleave: function(){
+                let id = $(this).attr('id') + "Circle";
+                document.getElementById(id).setAttribute('r', '40%');
+            }
+        });
+
+    }
+
+    function circleAndLabelContent(idForElement, element, label, /* functionToCall, valueOfFunctionCall */ ) {
+        return  '<div    id="' + idForElement + '" class="contentPresenter alignElementsVertical"><svg>' +
+                '<circle id="' + idForElement + 'Circle" class="contentPresenterCircle" r="40%" cx="50%" cy="50%" stroke-width="2.5%" />' +
+                '<image  id="' + idForElement + 'Graphic" href="Graphics/' + element + '.svg" x="20%" y="20%"  width="60%" height="60%"></image></svg>' +
+                '<label  style="font-family: Arial, serif; color:white">' + label.charAt(0).toUpperCase() + label.slice(1) +'</label></div>';
+    }
+
+    function contentPresenterActionOrganizer(id) {
+        let elements = id.split("_");
+        if(elements[1] === "head") { //change in tribeBar
+            for(let i = 1; i < tribeList.length; i++) { //goes through list of tribes to find the tribe
+                if(tribeList[i] === elements[0] && i !== currentTribe) {
+                    $("#"+ tribeList[currentTribe] + "_headCircle").css({fill: "rgb(0, 153, 255)",stroke: "white"}); //change color of circle back to normal
+                    currentTribe = i;
+                    changeGraphicsForSelectedTribe();
+                    break;
+                }
+            }
+        }
+        else if(elements[1] === "mainTerrain") {
+            $("#mainTerrainDiv").hide();
+            for (let i = 0; i < mainTerrain.length; i++) { //show elementDiv
+                if(elements[0] === mainTerrain[i]) { //check if element is in mainTerrain
+                    $("#" + elements[0] + "TerrainDiv").show();
+                    currentSelectedTile[1] = i; //assign mainCode to currentSelectedTile
+                    return;
+                }
+            }
+        }
+
+        else if(elements[0] === "finish") { //for every finish button
+            changeTile(currentSelectedTile[0], currentSelectedTile[1], currentSelectedTile[2], currentSelectedTile[3], currentSelectedTile[4], currentTribe);
+            resetResourceBar();
+            closeResourceBar();
+        }
+
+        else if(elements[1] === "oceanTerrain" || "waterTerrain" || "fieldTerrain" || "mountainTerrain") {
+            let mainTerrainSelected = currentSelectedTile[1];
+            let secondLayerSelected  = currentSelectedTile[2];
+            let thirdLayerSelected  = currentSelectedTile[3];
+            let specialLayerSelected  = currentSelectedTile[4];
+            let posOfElement;
+            for(let i = 0; i < combinedTerrain[mainTerrainSelected].length; i++) { // (i < length of the current terrain array), purpose: find position of element in array
+                if(elements[0] === combinedTerrain[mainTerrainSelected][i]) {
+                    posOfElement = i;
+                    break;
+                }
+            }
+            if(combinedTerrainElementLayer[mainTerrainSelected][posOfElement] === 4){ //is specialLayer, for village and ruin(s)
+
+                if(specialLayerSelected > -1) { //specialLayer is already selected
+                    changeTerrainCircle(combinedTerrain[mainTerrainSelected][specialLayerSelected] + "_" + mainTerrain[mainTerrainSelected], false); //change color of old circle to normal
+                }
+                if(specialLayerSelected !== posOfElement) { //specialLayer is not the same
+                    changeTerrainCircle(combinedTerrain[mainTerrainSelected][posOfElement] + "_" + mainTerrain[mainTerrainSelected], true); //change color of new circle to green
+                    currentSelectedTile[4] = posOfElement;
+
+                } else {
+                    currentSelectedTile[4] = -1;
+                }
+                if(combinedTerrain[mainTerrainSelected][posOfElement] === "village") { //village can not co-exist with second- and thirdLayer
+                    if(secondLayerSelected > -1)  {
+                        changeTerrainCircle(combinedTerrain[mainTerrainSelected][secondLayerSelected] + "_" + mainTerrain[mainTerrainSelected], false);
+                        currentSelectedTile[2] = -1;
+                    }
+                    if(thirdLayerSelected > -1)  {
+                        changeTerrainCircle(combinedTerrain[mainTerrainSelected][thirdLayerSelected] + "_" + mainTerrain[mainTerrainSelected], false);
+                        currentSelectedTile[3] = -1;
+                    }
+                }
+
+            }
+
+            else if(combinedTerrainElementLayer[mainTerrainSelected][posOfElement] === 3) { //is thirdLayer
+
+                if(thirdLayerSelected > -1) { //thirdLayer is already selected
+                    changeTerrainCircle(combinedTerrain[mainTerrainSelected][thirdLayerSelected] + "_" + mainTerrain[mainTerrainSelected], false); //change color of old circle to normal
+                }
+                if(thirdLayerSelected !== posOfElement) { //thirdLayer is not the same
+                    changeTerrainCircle(combinedTerrain[mainTerrainSelected][posOfElement] + "_" + mainTerrain[mainTerrainSelected], true); //change color of new circle to green
+                    currentSelectedTile[3] = posOfElement;
+
+                } else {
+                    currentSelectedTile[3] = -1;
+                }
+                if(secondLayerSelected > -1)  { //deactivate secondLayer
+                    changeTerrainCircle(combinedTerrain[mainTerrainSelected][secondLayerSelected] + "_" + mainTerrain[mainTerrainSelected], false);
+                    currentSelectedTile[2] = -1;
+                }
+                if(specialLayerSelected > -1 && combinedTerrain[mainTerrainSelected][specialLayerSelected] === "village" )  { //deactivate village
+                    changeTerrainCircle(combinedTerrain[mainTerrainSelected][specialLayerSelected] + "_" + mainTerrain[mainTerrainSelected], false);
+                    currentSelectedTile[4] = -1;
+                }
+                if(combinedTerrain[mainTerrainSelected][posOfElement] === "animal") { //if thirdLayer is an animal, forest has to be active too
+                    for(let i = 0; i < combinedTerrain[mainTerrainSelected].length; i++) { //search for position of forest in array
+                        if(combinedTerrain[mainTerrainSelected][i] === "forest") {
+                            changeTerrainCircle(combinedTerrain[mainTerrainSelected][i] + "_" + mainTerrain[mainTerrainSelected], true);
+                            currentSelectedTile[2] = i;
+                            break;
+                        }
+                    }
+                }
+
+            }
+
+            else if(combinedTerrainElementLayer[mainTerrainSelected][posOfElement] === 2) { //is secondLayer
+
+                if(secondLayerSelected > -1) { //secondLayer is already selected
+                    changeTerrainCircle(combinedTerrain[mainTerrainSelected][secondLayerSelected] + "_" + mainTerrain[mainTerrainSelected], false); //change color of old circle to normal
+                }
+                if(secondLayerSelected !== posOfElement) { //secondLayer is not the same
+                    changeTerrainCircle(combinedTerrain[mainTerrainSelected][posOfElement] + "_" + mainTerrain[mainTerrainSelected], true); //change color of new circle to green
+                    currentSelectedTile[2] = posOfElement;
+
+                } else {
+                    currentSelectedTile[2] = -1;
+                }
+                if(thirdLayerSelected > -1)  { //deactivate thirdLayer
+                    changeTerrainCircle(combinedTerrain[mainTerrainSelected][thirdLayerSelected] + "_" + mainTerrain[mainTerrainSelected], false);
+                    currentSelectedTile[3] = -1;
+                }
+                if(specialLayerSelected > -1 && combinedTerrain[mainTerrainSelected][specialLayerSelected] === "village" )  { //deactivate village
+                    changeTerrainCircle(combinedTerrain[mainTerrainSelected][specialLayerSelected] + "_" + mainTerrain[mainTerrainSelected], false);
+                    currentSelectedTile[4] = -1;
+                }
+
+            }
+
+        }
+
+    }
+    function changeTerrainCircle(element, turnGreen) { //element > object_terrainName: ruin_water
+        if(turnGreen === true) {
+            $("#"  + element + "TerrainCircle").css({
+                fill: "rgb(0, 230, 77)",
+                stroke: "rgb(0, 230, 77)"
+            });
+        }
+        else if(turnGreen === false) {
+            $("#" + element + "TerrainCircle").css({
+                fill: "rgb(0, 153, 255)",
+                stroke: "white"
+            });
+        }
+    }
+
+    function resetResourceBar() { //clear circles and reset currentSelectedTile
+        if(currentSelectedTile[1] > -1) { //main Terrain is selected
+            if(currentSelectedTile[4] > -1) { //specialLayer is selected
+                if (combinedTerrain[currentSelectedTile[1]][currentSelectedTile[4]] === "ruin") { //is ruin
+                    changeTerrainCircle("ruin_" + mainTerrain[currentSelectedTile[1]], false);
+                }
+                else if (combinedTerrain[currentSelectedTile[1]][currentSelectedTile[4]] === "village") { //is village
+                    changeTerrainCircle("village_" + mainTerrain[currentSelectedTile[1]], false);
+                }
+            }
+            if(currentSelectedTile[3] > -1) { //thirdLayer is selected
+                changeTerrainCircle(combinedTerrain[currentSelectedTile[1]][currentSelectedTile[3]] + "_" + mainTerrain[currentSelectedTile[1]], false);
+            }
+            if(currentSelectedTile[2] > -1) { //secondLayer is selected
+                changeTerrainCircle(combinedTerrain[currentSelectedTile[1]][currentSelectedTile[2]] + "_" + mainTerrain[currentSelectedTile[1]], false);
+            }
+            currentSelectedTile = [currentSelectedTile[0] /*saves first element for possible later use*/, -1 /*mainTerrain*/, -1 /*secondLayer*/, -1 /*thirdLayer*/, -1 /*specialLayer (ruin and village)*/]; //to save the current selected tile changes
+        }
+    }
+    function changeGraphicsForSelectedTribe() {
+        let tribeName = tribeList[currentTribe];
+        $("#displayedHead").attr("src", "Graphics/head_" + tribeName + ".svg"); //change displayed head
+        $("#"+ tribeName + "_headCircle").css({fill: "rgb(0, 230, 77)",stroke: "rgb(0, 230, 77)"});
+        renewContentPresenter();
+    }
+
+    function createMap() {
+        let map = $("#map");
+        let numberOfElementsInARow = 0;
+        let mapTileNumber = 0; //id for each mapTile element
+
+        for(let y = 0; y < (mapSize*2)-1 ; y++) {
+
+            if(y < mapSize) { //increases until max number is reached
+                numberOfElementsInARow++;
+                topLeftBorder[y] = mapTileNumber;
+                topRightBorder[y] = mapTileNumber + (numberOfElementsInARow - 1);
+                if(y === (mapSize-1)) { //elements are from the middle row are both bottom and top border
+                    bottomLeftBorder[y - (mapSize-1)] = mapTileNumber;
+                    bottomRightBorder[y - (mapSize-1)] = mapTileNumber + (numberOfElementsInARow - 1);
+                }
+            }
+            else {
+                numberOfElementsInARow--;
+                bottomLeftBorder[y - (mapSize-1)] = mapTileNumber;
+                bottomRightBorder[y - (mapSize-1)] = mapTileNumber + (numberOfElementsInARow - 1);
+
+            }
+            let currentRow = "Row" + y;
+
+            let fieldDiv          = '<div id="field' + currentRow +'" style="position:absolute; display: flex; flex-direction: row; justify-content: center;">';
+            let mountainDiv       = '<div id="mountain' + currentRow +'" style="position:absolute; display: flex; flex-direction: row; justify-content: center;">';
+            let secondLayerDiv    = '<div id="secondLayer' + currentRow +'" style="position:absolute; display: flex; flex-direction: row; justify-content: center;">';
+            let animalLayerDiv    = '<div id="animalLayer' + currentRow +'" style="position:absolute; display: flex; flex-direction: row; justify-content: center;">';
+            let fruitLayerDiv     = '<div id="fruitLayer' + currentRow +'" style="position:absolute; display: flex; flex-direction: row; justify-content: center;">';
+            let selectTileDiv     = '<div id="selectTile' + currentRow +'" style="position:absolute; display: flex; flex-direction: row; justify-content: center;">';
+            let villageDiv        = '<div id="village' + currentRow +'" style="position:absolute; display: flex; flex-direction: row; justify-content: center;">';
+            let ruinDiv           = '<div id="ruin' + currentRow +'" style="position:absolute; display: flex; flex-direction: row; justify-content: center;">';
+
+            for(let x = 0; x < numberOfElementsInARow; x++) {
+
+
+                fieldDiv       += ( '<img id="field_'+ mapTileNumber +'" class="mapTile" src="" alt=""/>');
+                mountainDiv    += ( '<img  id="mountain_'+ mapTileNumber +'" class="mountainLayerImage" src="" alt="" />');
+                secondLayerDiv += ( '<img  id="secondLayer_'+ mapTileNumber +'" class="secondLayerImage" src="" alt="" />');
+                animalLayerDiv  += ( '<img  id="animalLayer_'+ mapTileNumber +'" class="animalLayerImage" src="" alt="" />');
+                fruitLayerDiv  += ( '<img  id="fruitLayer_'+ mapTileNumber +'" class="fruitLayerImage" src="" alt="" />');
+                selectTileDiv  += ( '<img  id="selectTile_'+ mapTileNumber +'" class="selectTileImage" src="" alt="" />');
+                villageDiv     += ( '<img  id="village_'+ mapTileNumber +'" class="villageImage" src="" alt="" />');
+                ruinDiv        += ( '<img  id="ruin_'+ mapTileNumber +'" class="ruinImage" src="" alt="" />');
+                mapTileNumber++;
+            }
+
+
+            map.append(fieldDiv + "</div>");
+            map.append(mountainDiv + "</div>");
+            map.append(secondLayerDiv + "</div>");
+            map.append(animalLayerDiv + "</div>");
+            map.append(fruitLayerDiv + "</div>");
+            map.append(selectTileDiv + "</div>");
+            map.append(villageDiv + "</div>");
+            map.append(ruinDiv + "</div>");
+        }
+        resizeMapContent();
+        for(let x = 0; x < mapContent.length; x++) {
+            changeTile(x, mapContent[x][0], mapContent[x][1], mapContent[x][2], mapContent[x][3], mapContent[x][4]);
+        }
+    }
+    function resizeMapContent() {
+        let map = $("#map");
+        let mapTile = $(".mapTile");
+        let mountainLayerImage = $(".mountainLayerImage");
+        let secondLayerImage = $(".secondLayerImage");
+        let animalLayerImage = $(".animalLayerImage");
+        let fruitLayerImage = $(".fruitLayerImage");
+        let selectTileImage = $(".selectTileImage");
+        let villageImage = $(".villageImage");
+        let ruinImage = $(".ruinImage");
+
+        let groundSurfaceRatio = 70/120.05; // ratio was founded by analysing field_luxidoor.svg
+        let mapTileGroundHeight = (parseInt(mapHeight,10)/mapSize)*groundSurfaceRatio; //calculates the height of the ground, found by analysing field_luxidoor.svg
+        let mapTileHeight = (parseInt(mapHeight,10)-mapTileGroundHeight)/mapSize; //removes ground height to prevent overlapping of ground over map, found by analysing field_luxidoor.svg
+
+        let mapTileWidth = mapTileHeight*aspectRatioOfTileWidthHeight; //calculates new groundHeight
+        mapTileHeight = mapTileWidth*aspectRatioOfTileHeightWidth;
+        mapTileGroundHeight = mapTileHeight*groundSurfaceRatio;
+
+        let horizontalMapTileInaccuracy = 1.65/(201.65*2)*mapTileWidth; // value found by analysing field_luxidoor.svg, width of the empty horizontal space
+        let verticalMapTileInaccuracy =  1.35/191.4*mapTileHeight; //value found by analysing field_luxidoor.svg, height of the empty vertical space
+        let adjustedMapTileWidth = mapTileWidth-horizontalMapTileInaccuracy*2; //width of actual land mass
+        let adjustedMapTileHeight = mapTileHeight-verticalMapTileInaccuracy; //height of actual land mass
+
+        let secondLayerVerticalMargin = 9.85/101.05; //value found by analysing selectTile.svg border width, used because the selectTile zones in game the trees
+        let mountainWidth = 104.05/99.95*adjustedMapTileWidth; //(total space)/(space of the mountain ground)
+        let mountainEmptyHorizontalSpaceLeft = 4.1/104.05*adjustedMapTileWidth; //(empty space on the left)/(total space)
+        let mountainEmptyHorizontalSpaceRight = 0.28/104.05*adjustedMapTileWidth; //(empty space on the right)/(total space)
+
+
+        mapTile.css({height: "100%", width: mapTileWidth, marginRight: -horizontalMapTileInaccuracy, marginLeft: -horizontalMapTileInaccuracy}); //scale tiles
+        mountainLayerImage.css({height: "100%", width: mountainWidth, marginRight: -mountainEmptyHorizontalSpaceRight, marginLeft: -mountainEmptyHorizontalSpaceLeft});
+        secondLayerImage.css({height: "100%", width: adjustedMapTileWidth-(secondLayerVerticalMargin*2), marginRight: secondLayerVerticalMargin, marginLeft:  secondLayerVerticalMargin}); //toDO check if secondLayerVerticalMargin*mapTileWidth is needed
+        animalLayerImage.css({height: "100%", width: adjustedMapTileWidth*0.35, marginRight: adjustedMapTileWidth*0.325, marginLeft:   adjustedMapTileWidth*0.325});
+        fruitLayerImage.css({height: "100%", width: adjustedMapTileWidth*0.55, marginRight: adjustedMapTileWidth*0.225, marginLeft:   adjustedMapTileWidth*0.225}); //
+        selectTileImage.css({height: "100%", width: adjustedMapTileWidth});
+        villageImage.css({height: "100%", width: adjustedMapTileWidth});
+        ruinImage.css({height: "100%", width: adjustedMapTileWidth-(secondLayerVerticalMargin*adjustedMapTileWidth*4), marginRight: secondLayerVerticalMargin*adjustedMapTileWidth*2, marginLeft: secondLayerVerticalMargin*adjustedMapTileWidth*2});
+
+        //create user interaction svg
+        let numberOfElementsInARow = 0;
+        let mapTileNumber = 0;
+
+
+        for(let y = 0; y < (mapSize*2)-1 ; y++) {
+            let currentRow = "Row" + y;
+            let userInteractionDiv = '<div id="userInteraction' + currentRow +'" style="position:absolute; display: flex; flex-direction: row; justify-content: center;">';
+            if(y < mapSize) { //increases until max number is reached
+                numberOfElementsInARow++;
+            }
+            else {
+                numberOfElementsInARow--;
+            }
+            for(let x = 0; x < numberOfElementsInARow; x++) {
+
+                let svg = '<svg class="userInteractionSVG" ><polygon id="userInteraction_' + mapTileNumber + '" class="userInteractionArea" points=" 0,' + adjustedMapTileHeight/2 + ' ' + adjustedMapTileWidth/2 + ',' + adjustedMapTileHeight + ' ' + adjustedMapTileWidth + ',' + adjustedMapTileHeight/2  + ' ' + adjustedMapTileWidth/2 + ',' + 0 +' " style="fill: rgba(0,0,0,0.0)"></polygon>' +
+                          '<polygon id="userInteractionTopLeft_' + y + '_' + numberOfElementsInARow + '_' + mapTileNumber + '" class="userInteractionAreaTopLeft" points="0 0,' + adjustedMapTileWidth/2 + ' 0,0 ' +  adjustedMapTileHeight/2 + '" style="fill: rgba(0,0,0,0.0)"></polygon>' +
+                          '<polygon id="userInteractionTopRight_' + y + '_' + numberOfElementsInARow + '_' + mapTileNumber + '" class="userInteractionAreaTopRight" points="' + adjustedMapTileWidth + ' 0,' + adjustedMapTileWidth/2 + ' 0,' + adjustedMapTileWidth + ' ' + adjustedMapTileHeight/2 + '" style="fill: rgba(0,0,0,0.0)"></polygon></svg>'; //bottom part of the polygon is overlapped by the top part of the svg, created triangles so the not active part can call the part it is covering
+                userInteractionDiv += (svg);
+                mapTileNumber++;
+            }
+            map.append(userInteractionDiv + "</div>");
+
+        }
+        let userInteractionSVG = $(".userInteractionSVG");
+        userInteractionSVG.css({width: adjustedMapTileWidth, height: adjustedMapTileHeight});
+
+        $(".userInteractionArea").on({ //actions for userInterActionArea
+            click: function(){
+                let userInteractionId = $(this).attr('id');
+                let elements = userInteractionId.split("_");
+                let id = parseInt(elements[1]);
+                selectTile(currentSelectedTile[0], false);//remove last selectTile
+                currentSelectedTile[0] = id; // add id (mapTile number) to current selected element
+                selectTile(currentSelectedTile[0], true);
+                openResourceBar();
+            },
+        });
+        $(".userInteractionAreaTopLeft").on({ //actions for userInterActionAreaTopLeft, area that the svg overlaps from the top left userInteractionArea
+            click: function(){
+                let userInteractionId = $(this).attr('id');
+                let elements = userInteractionId.split("_");
+                let currentRow = parseInt(elements[1]);
+                let elementsInARow = parseInt(elements[2]);
+                let id = parseInt(elements[3]);
+                let coveredId = id - elementsInARow - 1;
+
+                if(currentRow < mapSize) {
+                    coveredId++;
+                }
+
+                if(!topLeftBorder.includes(id)) {
+                    selectTile(currentSelectedTile[0], false);//remove last selectTile
+                    currentSelectedTile[0] = coveredId; // add id (mapTile number) to current selected element
+                    selectTile(currentSelectedTile[0], true);
+                    openResourceBar();
+                }
+
+            },
+        });
+        $(".userInteractionAreaTopRight").on({ //actions for userInterActionAreaTopRight, area that the svg overlaps from the top right userInteractionArea
+            click: function(){
+                let userInteractionId = $(this).attr('id');
+                let elements = userInteractionId.split("_");
+                let currentRow = parseInt(elements[1]);
+                let elementsInARow = parseInt(elements[2]);
+                let id = parseInt(elements[3]);
+                let coveredId = id - elementsInARow;
+
+                if(currentRow < mapSize) {
+                    coveredId++;
+                }
+
+                if(!topRightBorder.includes(id)) {
+                    selectTile(currentSelectedTile[0], false);//remove last selectTile
+                    currentSelectedTile[0] = coveredId; // add id (mapTile number) to current selected element
+                    selectTile(currentSelectedTile[0], true);
+                    openResourceBar();
+                }
+
+            },
+        });
+
+
+
+        let margin =  0;
+        let marginPerRow = Math.round(0.5*mapTileHeight);
+        for(let x = ((mapSize*2)-1)-1; x >= 0 ; x--) {
+            let currentFieldElement = "#fieldRow" + x;
+            $(currentFieldElement).css({bottom: margin});
+
+            let currentMountainElement = "#mountainRow" + x;
+            $(currentMountainElement).css({bottom: margin+mapTileWidth*0.088}); //toDO find something better than 0.088
+
+            let currentSecondLayerElement = "#secondLayerRow" + x;
+            $(currentSecondLayerElement).css({bottom: margin+mapTileGroundHeight}); //toDO find better value than 1
+
+            let currentAnimalLayerElement = "#animalLayerRow" + x;
+            $(currentAnimalLayerElement).css({bottom: margin+mapTileGroundHeight*1.5}); //toDO find better value
+
+            let currentFruitLayerElement = "#fruitLayerRow" + x;
+            $(currentFruitLayerElement).css({bottom: margin+mapTileGroundHeight*1.3}); //toDO find better value
+
+            let currentUserInteractionElement = "#userInteractionRow" + x;
+            $(currentUserInteractionElement).css({bottom: margin+mapTileGroundHeight});
+
+            let currentSelectTileElement = "#selectTileRow" + x;
+            $(currentSelectTileElement).css({bottom: margin+mapTileGroundHeight});
+
+            let currentVillageElement = "#villageRow" + x;
+            $(currentVillageElement).css({bottom: margin+mapTileGroundHeight});
+
+            let currentRuinElement = "#ruinRow" + x;
+            $(currentRuinElement).css({bottom: margin+mapTileGroundHeight+secondLayerVerticalMargin*adjustedMapTileWidth*1.5});
+
+            margin += marginPerRow - verticalMapTileInaccuracy;
+
+        }
+
+    }
+    function selectTile(toSelectTile /*tile number*/, toSelect /* boolean, true = selectTile, false = unselectTile*/) {
+        if(toSelectTile > -1 && toSelectTile < mapSize*mapSize) { //tile number exists
+            if(toSelect)
+                $("#selectTile_" + toSelectTile).attr("src", "Graphics/selectTile.svg");
+            else
+                $("#selectTile_" + toSelectTile).attr("src", "");
+
+        }
+    }
+
+    function changeTile(id, mainCode, secondLayerCode, thirdLayerCode, specialLayerCode, tribe) { //apply changes to a certain tile
+        let secondLayerExist = secondLayerCode > -1;
+        let thirdLayerExist = thirdLayerCode > -1;
+        let villageExists = combinedTerrain[mainCode][specialLayerCode] === "village";
+        let ruinExists = combinedTerrain[mainCode][specialLayerCode] === "ruin";
+
+        let fieldLayer = $("#field_" + id);
+        let mountainLayer = $("#mountain_" + id);
+        let secondLayer = $("#secondLayer_" + id);
+        let animalLayer = $("#animalLayer_" + id);
+        let fruitLayer = $("#fruitLayer_" + id);
+        let selectTile = $("#selectTile_" + id);
+        let village = $("#village_" + id);
+        let ruin = $("#ruin_" + id);
+
+        mountainLayer.attr("src", "");
+        secondLayer.attr("src", "");
+        animalLayer.attr("src", "");
+        fruitLayer.attr("src", "");
+        selectTile.attr("src", "");
+        village.attr("src", "");
+        ruin.attr("src", "");
+
+
+        if(villageExists) { //there can not be a second-/thirdLayer
+            secondLayerCode = -1;
+            thirdLayerCode = -1;
+            village.attr("src", "Graphics/village.svg");
+        }
+        else if(ruinExists) {
+            ruin.attr("src", "Graphics/ruin.svg");
+        }
+
+
+        if(mainCode === 0) { //is ocean
+            if(bottomLeftBorder.includes(id)) {
+                if(bottomRightBorder.includes(id)) {
+                    fieldLayer.attr("src", "Graphics/ocean.svg");
+                }
+                else {
+                    fieldLayer.attr("src", "Graphics/oceanLeft.svg");
+                }
+            }else if(bottomRightBorder.includes(id)) {
+                fieldLayer.attr("src", "Graphics/oceanRight.svg");
+            }else {
+                fieldLayer.attr("src", "Graphics/oceanStandard.svg");
+            }
+            if(secondLayerExist && !ruinExists ) { //whale not displayed under a ruin
+                secondLayer.attr("src", "Graphics/" + oceanTerrain[secondLayerCode] + ".svg");
+            }
+            thirdLayerCode = -1; //ocean does not have a third layer
+        }
+        else if(mainCode === 1) { //is water
+            if(bottomLeftBorder.includes(id)) {
+                if(bottomRightBorder.includes(id)) {
+                    fieldLayer.attr("src", "Graphics/water.svg");
+                }
+                else {
+                    fieldLayer.attr("src", "Graphics/waterLeft.svg");
+                }
+            }else if(bottomRightBorder.includes(id)) {
+                fieldLayer.attr("src", "Graphics/waterRight.svg");
+            }else {
+                fieldLayer.attr("src", "Graphics/waterStandard.svg");
+            }
+            if(secondLayerExist) {
+                secondLayer.attr("src", "Graphics/" + waterTerrain[secondLayerCode] + ".svg");
+            }
+
+            thirdLayerCode = -1; //water does not have a third layer
+        }
+        else if(mainCode === 2) { //is a field
+            fieldLayer.attr("src", "Graphics/field_" + tribeList[tribe] + ".svg");
+            if(secondLayerExist && (!ruinExists || fieldTerrain[secondLayerCode] === "forest")) { //forest is the only secondLayerElement which is displayed under a ruin
+                if(combinedTerrainTribeSpecific[mainCode][secondLayerCode]) { //element is tribe specific
+                    secondLayer.attr("src", "Graphics/" + fieldTerrain[secondLayerCode] + "_" + tribeList[tribe] + ".svg");
+                }
+                else {
+                    secondLayer.attr("src", "Graphics/" + fieldTerrain[secondLayerCode] + ".svg");
+                }
+            }
+            if(thirdLayerExist && !ruinExists) { //thirdLayer not displayed under a ruin, need to be change due to scaling issues, thirdLayer is internally separated between animalLayer and fruitLayer
+                if(combinedTerrain[mainCode][thirdLayerCode] === "animal") {
+                    animalLayer.attr("src", "Graphics/" + fieldTerrain[thirdLayerCode] + "_" + tribeList[tribe] + ".svg");
+                }
+                else if(combinedTerrain[mainCode][thirdLayerCode] === "fruit") {
+                    fruitLayer.attr("src", "Graphics/" + fieldTerrain[thirdLayerCode] + "_" + tribeList[tribe] + ".svg");
+                }
+                /*if(combinedTerrainTribeSpecific[mainCode][thirdLayerCode]) { // element is tribe specific
+                    thirdLayer.attr("src", "Graphics/" + fieldTerrain[thirdLayerCode] + "_" + tribeList[tribe] + ".svg");
+                }
+                else {
+                    thirdLayer.attr("src", "Graphics/" + fieldTerrain[thirdLayerCode] + ".svg");
+                } */
+            }
+
+        }
+        else if(mainCode === 3) { //is a mountain
+            fieldLayer.attr("src", "Graphics/field_" + tribeList[tribe] + ".svg");
+            mountainLayer.attr("src", "Graphics/mountain_" + tribeList[tribe] + ".svg");
+            if(secondLayerExist && !ruinExists) { //metal is not displayed under a ruin
+                secondLayer.attr("src", "Graphics/" + mountainTerrain[secondLayerCode] + ".svg");
+            }
+
+            thirdLayerCode = -1; //mountains do not have a third layer
+        }
+
+
+        mapContent[id] = [mainCode , secondLayerCode, thirdLayerCode, specialLayerCode, tribe];
+
+    }
+
+    function clickSidebar(sideBarIcon) {
+        sideBarIcon.classList.toggle("changeSidebarIcon");
+      
+        if(sidebarActive) {
+            closeSidebar();
+        }
+        else {
+            openSidebar();
+        }
+    }
+
+    function closeSidebar() {
+        sidebarActive = false;
+        $("#sidebar").hide(200);
+    }
+    function openSidebar() {
+        closeResourceBar();
+        closeTribeBar();
+        sidebarActive = true;
+        $("#sidebar").show(400);
+    }
+
+    function clickTribeBar() {
+        if(tribeBarActive) {
+            closeTribeBar();
+        }
+        else {
+            openTribeBar();
+        }
+    }
+
+    function closeTribeBar() {
+        $("#tribeBar").slideUp(200);
+        tribeBarActive = false;
+    }
+    function openTribeBar() {
+        closeResourceBar();
+        $("#tribeBar").slideDown(400);
+        tribeBarActive = true;
+
+    }
+
+    function closeResourceBar() {
+        if(currentSelectedTile[0] > -1) //remove last selectTile
+            $("#selectTile_" + currentSelectedTile[0]).attr("src", "");
+        resourceBarActive = false;
+        $("#resourceBar").slideUp("fast");
+
+    }
+    function openResourceBar() {
+        $("#oceanTerrainDiv").hide();
+        $("#waterTerrainDiv").hide();
+        $("#fieldTerrainDiv").hide();
+        $("#mountainTerrainDiv").hide();
+        closeTribeBar();
+        resourceBarActive = true;
+        $("#resourceBar").slideDown("fast");
+        $("#mainTerrainDiv").show();
+
+
+    }
+
+    function changeInput() {
+        let input= $("#mainInput");
+        let inputContent =  input.val();
+        if(inputContent == null || inputContent.length === 0){
+            input.css({borderColor: "rgb(255, 102, 102)"});
+        }
+        else if(!isNaN(inputContent)) {
+            input.css({borderColor: "rgb(0, 230, 77)"});
+            if(confirm("Are you sure you want to change the map size? Every tile will be replaced if you confirm.")) {
+                $("#map").html('<div id="backgroundMap" style="width: 100%; height: 100%" onclick="closeResourceBar()"></div>');
+                mapSize = inputContent;
+                mapContent = new Array(mapSize*mapSize).fill([2, -1, -1, -1,currentTribe]); //for saving all elements, array is 2D, first dimension represent the mapTile id, in the second dimension saves [mainCode , secondLayerCode, thirdLayerCode, specialLayerCode, tribe]
+                topLeftBorder = new Array(mapSize); //all mapTiles with a border on the top left
+                topRightBorder = new Array(mapSize); //all mapTiles with a border on the top right
+                bottomLeftBorder = new Array(mapSize); //all mapTiles with a border on the bottom left
+                bottomRightBorder = new Array(mapSize); //all mapTiles with a border on the bottom right
+                currentSelectedTile = [-1 /*selected tile*/, -1 /*mainTerrain*/, -1 /*secondLayer*/, -1 /*thirdLayer*/, -1 /*specialLayer (ruin and village)*/]; //to save the current selected tile changes
+                createMap();
+            }
+        }
+        else if(inputContent.startsWith("$")) {
+            $("#map").html('<div id="backgroundMap" style="width: 100%; height: 100%" onclick="closeResourceBar()"></div>');
+            mapSize = Number(inputContent.substring(1, inputContent.indexOf( "$",1)));
+            mapContent = new Array(mapSize*mapSize); //for saving all elements, array is 2D, first dimension represent the mapTile id, in the second dimension saves [mainCode , secondLayerCode, thirdLayerCode, specialLayerCode, tribe]
+            topLeftBorder = new Array(mapSize); //all mapTiles with a border on the top left
+            topRightBorder = new Array(mapSize); //all mapTiles with a border on the top right
+            bottomLeftBorder = new Array(mapSize); //all mapTiles with a border on the bottom left
+            bottomRightBorder = new Array(mapSize); //all mapTiles with a border on the bottom right
+            currentSelectedTile = [-1 /*selected tile*/, -1 /*mainTerrain*/, -1 /*secondLayer*/, -1 /*thirdLayer*/, -1 /*specialLayer (ruin and village)*/]; //to save the current selected tile changes
+            let i  = inputContent.indexOf( "$",1) + 1;
+            for(let x = 0; x < mapContent.length; x++) {
+                mapContent[x] = new Array(5);
+                for(let y = 0; y < 5; y++) {
+                    let currentValue = Number(inputContent.substring(i, inputContent.indexOf(",", i)));
+                    i = inputContent.indexOf(",", i)+1;
+                    mapContent[x][y] = currentValue;
+                }
+            }
+            input.val(mapSize);
+            createMap();
+        }
+        else {
+            input.css({borderColor: "rgb(255, 102, 102)"});
+        }
+
+    }
+    function swapSidebar() { //only one swap possible, continue working on it when sidebar is more 
+        if(sidebarLeft) {
+            $("#sidebar").css({right: 0});
+            sidebarLeft = false;
+        }
+        else {
+            $("#sidebar").css({left: 0});
+            sidebarLeft = true;
+        }
+    }
+    function copyText() {
+        let mainInput = $("#mainInput");
+        let toCopy = "$" + mapSize + "$";
+        for(let x = 0; x < mapContent.length; x++) {
+            for(let y = 0; y < 5; y++) {
+                toCopy += mapContent[x][y] + ",";
+            }
+        }
+        mainInput.val(toCopy); //workaround since it is only possible to copy from an input
+        mainInput.select();
+        document.execCommand('copy');
+        mainInput.val(mapSize); //back to the mapSize value
+        window.alert('Copied map value as a text to your clipboard. To reuse it later paste it in the "map size" field.');
+    }
+
+    </script>
+
+</head>
+<body>
+    <div id="navBar">
+        <div id="sideBarIcon" onclick="clickSidebar(this)">
+            <div id="barTop"></div>
+            <div id="barMiddle"></div>
+            <div id="barBottom"></div>
+        </div>
+        <div class="inputOrganisation alignElementsVertical">
+            <input type="text" id="mainInput" placeholder="map size" onchange="changeInput()" autofocus>
+            <label for="mainInput" style="display: none;font-family: 'Arial',serif">Map size</label> <!--Not displayed due to design issues, left for easier implementation in the future-->
+        </div>
+        <img id="displayedHead" src="Graphics/head_luxidoor.svg" alt="" onclick="clickTribeBar()"/>
+    </div>
+    <div id="content" style="width: 100%; height: 100%">
+        <div id="sidebar" class="alignElementsReverseVertical" style="z-index: 1000">
+            <div class="alignElementsHorizontal">
+                <img id="swapSidebar" class="elementsInSideBar" src="Graphics/swap.svg" alt="" onclick="swapSidebar()"/>
+                <img id="copyText" class="elementsInSideBar" src="Graphics/copy.svg" alt="" onclick="copyText()"/>
+            </div>
+        </div>
+        <div id="map">
+            <div id="backgroundMap" style="width: 100%; height: 100%" onclick="closeResourceBar()"></div>
+        </div>
+        <div id="tribeBar"></div>
+        <div id="resourceBar" class="alignElementsVertical">
+            <div id="mainTerrainDiv" class="alignElementsReverseVertical positionRelativeToParent"></div>
+            <div id="oceanTerrainDiv" class="alignElementsReverseVertical positionRelativeToParent"></div>
+            <div id="waterTerrainDiv" class="alignElementsReverseVertical positionRelativeToParent"></div>
+            <div id="fieldTerrainDiv" class="alignElementsReverseVertical positionRelativeToParent"></div>
+            <div id="mountainTerrainDiv" class="alignElementsReverseVertical positionRelativeToParent"></div>
+        </div>
+
+    </div>
+</body>
+
+</html>

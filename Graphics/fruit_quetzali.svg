@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" height="48.15px" width="55.05px" xmlns="http://www.w3.org/2000/svg">
+  <g transform="matrix(1.0, 0.0, 0.0, 1.0, 2.1, -3.25)">
+    <use height="23.3" transform="matrix(1.0, 0.0, 0.0, 1.0, 23.6, 14.05)" width="14.6" xlink:href="#sprite0"/>
+    <use height="23.3" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.35, 13.7)" width="14.6" xlink:href="#sprite0"/>
+  </g>
+  <defs>
+    <g id="sprite0" transform="matrix(1.0, 0.0, 0.0, 1.0, 6.9, 11.35)">
+      <use height="23.3" transform="matrix(1.0, 0.0, 0.0, 1.0, -6.9, -11.35)" width="14.6" xlink:href="#shape0"/>
+    </g>
+    <g id="shape0" transform="matrix(1.0, 0.0, 0.0, 1.0, 6.9, 11.35)">
+      <path d="M-1.25 -10.45 L0.35 -11.35 2.1 -10.4 0.45 -9.45 -1.25 -10.45 M2.1 -8.85 L3.65 -8.0 0.4 -5.95 0.4 -6.0 -2.9 -7.95 -2.9 -7.9 -2.95 -7.95 -1.3 -8.95 -1.3 -8.15 0.45 -7.2 2.1 -8.05 2.1 -8.85 M3.65 -3.4 L5.35 -2.5 0.4 0.55 -4.6 -2.45 -4.6 -2.4 -4.65 -2.45 -2.9 -3.5 -2.9 -2.75 0.4 -0.75 3.65 -2.75 3.65 -3.4" fill="#ffee47" fill-rule="evenodd" stroke="none"/>
+      <path d="M2.1 -10.4 L2.1 -8.85 2.1 -8.05 0.45 -7.2 0.45 -9.45 2.1 -10.4 M3.65 -8.0 L3.65 -3.4 3.65 -2.75 0.4 -0.75 0.4 -5.95 3.65 -8.0 M5.35 -2.5 L5.35 5.85 3.45 7.0 0.4 8.85 0.4 8.8 0.4 0.55 5.35 -2.5" fill="#fccc01" fill-rule="evenodd" stroke="none"/>
+      <path d="M-2.7 7.0 L-4.6 5.9 -4.6 -2.4 -4.6 -2.45 0.4 0.55 0.4 8.8 -2.7 7.0 M-2.9 -3.5 L-2.9 -7.9 -2.9 -7.95 0.4 -6.0 0.4 -5.95 0.4 -0.75 -2.9 -2.75 -2.9 -3.5 M-1.3 -8.95 L-1.3 -10.5 -1.25 -10.45 0.45 -9.45 0.45 -7.2 -1.3 -8.15 -1.3 -8.95" fill="#cea32c" fill-rule="evenodd" stroke="none"/>
+      <path d="M0.4 11.1 L-2.7 9.3 -2.7 7.0 0.4 8.8 0.4 8.85 0.4 11.1" fill="#b18438" fill-rule="evenodd" stroke="none"/>
+      <path d="M3.45 7.0 L3.45 9.25 0.4 11.1 0.4 8.85 3.45 7.0" fill="#eeae4b" fill-rule="evenodd" stroke="none"/>
+      <path d="M-0.9 11.95 L-6.9 1.4 -5.35 0.9 -0.35 11.5 -0.9 11.95" fill="#31b724" fill-rule="evenodd" stroke="none"/>
+      <path d="M-0.9 11.9 L-4.45 9.7 -6.85 1.35 -0.9 11.9" fill="#297a36" fill-rule="evenodd" stroke="none"/>
+      <path d="M1.7 11.95 L1.15 11.5 6.2 0.85 7.7 1.4 1.7 11.95" fill="#297a36" fill-rule="evenodd" stroke="none"/>
+      <path d="M1.7 11.9 L7.65 1.35 5.35 9.7 1.7 11.9" fill="#31b724" fill-rule="evenodd" stroke="none"/>
+    </g>
+  </defs>
+</svg>

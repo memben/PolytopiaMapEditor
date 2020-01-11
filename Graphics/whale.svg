@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" height="151.95px" width="201.0px" xmlns="http://www.w3.org/2000/svg">
+  <g transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 16.0)">
+    <use height="146.0" id="bound" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" width="201.0" xlink:href="#sprite0"/>
+    <use height="68.7" transform="matrix(1.0, 0.0, 0.0, 1.0, 53.1, 36.7)" width="87.05" xlink:href="#sprite1"/>
+  </g>
+  <defs>
+    <g id="sprite0" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)">
+      <use height="146.0" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)" width="201.0" xlink:href="#shape0"/>
+    </g>
+    <g id="shape0" transform="matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)">
+      <path d="M0.0 0.0 L201.0 0.0 201.0 146.0 0.0 146.0 0.0 0.0" fill="#000000" fill-opacity="0.0" fill-rule="evenodd" stroke="none"/>
+    </g>
+    <g id="sprite1" transform="matrix(1.0, 0.0, 0.0, 1.0, 43.5, 34.35)">
+      <use height="68.7" transform="matrix(1.0, 0.0, 0.0, 1.0, -28.05, -34.35)" width="71.6" xlink:href="#shape1"/>
+      <use height="21.0" transform="matrix(1.0, 0.0, 0.0, 1.0, -43.5, 0.7)" width="22.0" xlink:href="#sprite2"/>
+    </g>
+    <g id="shape1" transform="matrix(1.0, 0.0, 0.0, 1.0, 28.05, 34.35)">
+      <path d="M17.35 -11.1 L8.15 -8.05 -17.25 -13.35 17.35 -11.1" fill="#2b3763" fill-rule="evenodd" stroke="none"/>
+      <path d="M8.15 -8.05 L17.35 -11.1 43.55 4.45 31.55 0.25 8.15 -8.05" fill="#313f70" fill-rule="evenodd" stroke="none"/>
+      <path d="M43.55 27.95 L18.4 34.35 21.5 27.95 43.55 27.95 M-19.75 -7.65 L-28.05 -7.65 -28.05 -18.4 -17.25 -13.35 -19.75 -7.65" fill="#0099ff" fill-rule="evenodd" stroke="none"/>
+      <path d="M-5.2 21.85 L-19.75 -7.65 -17.25 -13.35 -7.5 12.6 -5.2 21.85" fill="#0088e2" fill-rule="evenodd" stroke="none"/>
+      <path d="M8.15 -8.05 L31.55 0.25 -6.35 12.4 8.15 -8.05 M-28.05 -18.4 L-28.05 -34.35 -17.25 -13.35 -28.05 -18.4 M21.5 27.95 L31.55 0.25 43.55 27.95 21.5 27.95" fill="#2d2f5d" fill-rule="evenodd" stroke="none"/>
+      <path d="M18.4 34.35 L-5.2 21.85 -7.5 12.6 Q-0.05 17.7 8.15 20.9 L21.5 27.95 18.4 34.35" fill="#0074c1" fill-rule="evenodd" stroke="none"/>
+      <path d="M-17.25 -13.35 L8.15 -8.05 -6.35 12.4 -7.5 12.6 -17.25 -13.35" fill="#25264c" fill-rule="evenodd" stroke="none"/>
+      <path d="M-6.35 12.4 L31.55 0.25 21.5 27.95 8.15 20.9 Q-0.05 17.7 -7.5 12.6 L-6.35 12.4" fill="#000000" fill-rule="evenodd" stroke="none"/>
+      <path d="M31.55 0.25 L43.55 4.45 43.55 27.95 31.55 0.25" fill="#ffffff" fill-rule="evenodd" stroke="none"/>
+    </g>
+    <g id="sprite2" transform="matrix(1.0, 0.0, 0.0, 1.0, 17.0, 15.0)">
+      <use height="21.0" transform="matrix(1.0, 0.0, 0.0, 1.0, -17.0, -15.0)" width="22.0" xlink:href="#shape2"/>
+    </g>
+    <g id="shape2" transform="matrix(1.0, 0.0, 0.0, 1.0, 17.0, 15.0)">
+      <path d="M-13.0 -5.0 L-15.0 -9.0 -5.0 1.0 -4.0 6.0 -11.0 -1.0 -13.0 -5.0" fill="#35bbf9" fill-rule="evenodd" stroke="none"/>
+      <path d="M-15.0 -9.0 L-11.35 -7.45 -10.05 -6.9 -3.1 -4.1 -5.0 1.0 -15.0 -9.0" fill="#3dcefa" fill-rule="evenodd" stroke="none"/>
+      <path d="M-4.0 6.0 L-5.0 1.0 -3.1 -4.1 5.0 5.0 -4.0 6.0" fill="#5ccefb" fill-rule="evenodd" stroke="none"/>
+      <path d="M-3.1 -4.1 L3.0 -1.0 5.0 5.0 -3.1 -4.1" fill="#49bbe9" fill-rule="evenodd" stroke="none"/>
+      <path d="M-15.0 -9.0 L-13.0 -5.0 -17.0 -5.0 -17.0 -15.0 -11.35 -7.45 -15.0 -9.0 M-3.1 -4.1 L-10.05 -6.9 -6.0 -9.0 -3.1 -4.1" fill="#52acda" fill-rule="evenodd" stroke="none"/>
+      <path d="M-2.8 2.6 L-1.85 0.55 1.2 3.35 -2.8 2.6" fill="#3399ff" fill-rule="evenodd" stroke="none"/>
+      <path d="M0.6 -0.9 L2.3 -0.8 3.25 1.85 0.6 -0.9" fill="#0066cc" fill-rule="evenodd" stroke="none"/>
+      <path d="M-5.3 -4.95 L-4.0 -4.45 -6.75 -1.9 -5.3 -4.95" fill="#3399ff" fill-rule="evenodd" stroke="none"/>
+      <path d="M-8.1 -6.1 L-6.8 -5.6 -9.05 -3.9 -8.1 -6.1" fill="#3399ff" fill-rule="evenodd" stroke="none"/>
+      <path d="M-10.5 -7.05 L-9.2 -6.55 -11.15 -5.4 -10.5 -7.05" fill="#3399ff" fill-rule="evenodd" stroke="none"/>
+    </g>
+  </defs>
+</svg>
