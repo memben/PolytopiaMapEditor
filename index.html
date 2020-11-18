@@ -56,10 +56,10 @@
 
     let aspectRatioOfTileHeightWidth = 60.4/100.45; //is the aspect ratio of a tiles surface height to it's width
     let aspectRatioOfTileWidthHeight = 100.45/60.4; //is the aspect ratio of a tiles surface width to it's height
-    let sidebarActive = false;
+  
     let tribeBarActive = false;
     let resourceBarActive = false;
-    let sidebarLeft = true;
+    
     let navBarHeight;
     let navBarHeightUnit;
     let mapWidth;
@@ -67,7 +67,7 @@
 
 
     $(document).ready(function(){ //run when document is ready
-        $("#sidebar").hide();
+      
         $("#tribeBar").hide();
         $("#resourceBar").hide();
 
@@ -94,12 +94,9 @@
         let navBar =  $("#navBar");
         let content = $("#content");
         let map = $("#map");
-        let sidebar = $("#sidebar");
-        let elementsInSideBar = $(".elementsInSideBar");
         let tribeBar = $("#tribeBar");
         let resourceBar =  $("#resourceBar");
-
-        let sideBarIcon = $("#sideBarIcon"); //top left icon
+        let copyIcon = $("#copyIcon"); //top left icon
         let inputOrganisation = $(".inputOrganisation");
         let mainInput = $("#mainInput");
         let displayedHead = $("#displayedHead");
@@ -113,7 +110,7 @@
         navBar.css({height: navBarHeightCombined});
 
         //scale all elements in navBar
-        sideBarIcon.css({height: navBarHeight*0.8 + navBarHeightUnit, width: navBarHeight*0.8 + navBarHeightUnit , marginTop: navBarHeight*0.1 + navBarHeightUnit, marginLeft: marginNavBarItems + "vw", cursor: "pointer"});
+        copyIcon.css({height: navBarHeight*0.8 + navBarHeightUnit, width: navBarHeight*0.8 + navBarHeightUnit , marginTop: navBarHeight*0.1 + navBarHeightUnit, marginLeft: marginNavBarItems + "vw", cursor: "pointer"});
         inputOrganisation.css({height: navBarHeight*0.6 + navBarHeightUnit, width: navBarHeight*1.8 + navBarHeightUnit , marginTop: navBarHeight*0.2 + navBarHeightUnit});
         mainInput.css({fontSize:navBarHeight*0.4 + navBarHeightUnit, borderBottomWidth: navBarHeight*0.05 + navBarHeightUnit  });
         displayedHead.css({height: navBarHeight*0.9 + navBarHeightUnit, width: navBarHeight*0.9 + navBarHeightUnit , marginTop: navBarHeight*0.05 + navBarHeightUnit, marginRight: marginNavBarItems + "vw", cursor: "pointer"});
@@ -124,10 +121,9 @@
         let navBarHeightInPixel =  navBar.height(); //gets height in pixel
         let usableHeight = windowHeight - navBarHeightInPixel; //removes height of the navigation Bar
 
-        //set margin to the top, and set height of sidebar to cover 100% of screen height
+        //set margin to the top
         map.css("margin-top", navBarHeightCombined);
-        sidebar.css({marginTop: navBarHeightCombined, height: (100-navBarHeight*windowWidth/windowHeight)*windowHeight/windowWidth + navBarHeightUnit, width: (2*(marginNavBarItems + navBarHeight*0.8) + navBarHeightUnit)});
-        elementsInSideBar.css({height: (navBarHeight*0.8+marginNavBarItems/2) + navBarHeightUnit, width: (navBarHeight*0.8+marginNavBarItems/2) + navBarHeightUnit, marginLeft: marginNavBarItems/4 + "vw", marginRight: marginNavBarItems/4 + "vw", marginBottom: marginNavBarItems/4 + "vw", cursor: "pointer"});
+       
         tribeBar.css({marginTop: navBarHeightCombined, borderBottomLeftRadius: navBarHeight*0.5+navBarHeightUnit, borderBottomRightRadius: navBarHeight*0.5+navBarHeightUnit});
 
         //scale contentPresenter
@@ -838,28 +834,7 @@
 
     }
 
-    function clickSidebar(sideBarIcon) {
-        sideBarIcon.classList.toggle("changeSidebarIcon");
-      
-        if(sidebarActive) {
-            closeSidebar();
-        }
-        else {
-            openSidebar();
-        }
-    }
-
-    function closeSidebar() {
-        sidebarActive = false;
-        $("#sidebar").hide(200);
-    }
-    function openSidebar() {
-        closeResourceBar();
-        closeTribeBar();
-        sidebarActive = true;
-        $("#sidebar").show(400);
-    }
-
+    
     function clickTribeBar() {
         if(tribeBarActive) {
             closeTribeBar();
@@ -946,16 +921,7 @@
         }
 
     }
-    function swapSidebar() { //only one swap possible, continue working on it when sidebar is more 
-        if(sidebarLeft) {
-            $("#sidebar").css({right: 0});
-            sidebarLeft = false;
-        }
-        else {
-            $("#sidebar").css({left: 0});
-            sidebarLeft = true;
-        }
-    }
+
     function copyText() {
         let mainInput = $("#mainInput");
         let toCopy = "$" + mapSize + "$";
@@ -968,7 +934,7 @@
         mainInput.select();
         document.execCommand('copy');
         mainInput.val(mapSize); //back to the mapSize value
-        window.alert('Copied map value as a text to your clipboard. To reuse it later paste it in the "map size" field.');
+        window.alert('Copied map value as a text to your clipboard. To reuse it later, paste it in the "map size" field.');
     }
 
     </script>
@@ -976,11 +942,8 @@
 </head>
 <body>
     <div id="navBar">
-        <div id="sideBarIcon" onclick="clickSidebar(this)">
-            <div id="barTop"></div>
-            <div id="barMiddle"></div>
-            <div id="barBottom"></div>
-        </div>
+        <img id="copyIcon" src="Graphics/copy.svg" alt="" onclick="copyText()"/>
+        
         <div class="inputOrganisation alignElementsVertical">
             <input type="text" id="mainInput" placeholder="map size" onchange="changeInput()" autofocus>
             <label for="mainInput" style="display: none;font-family: 'Arial',serif">Map size</label> <!--Not displayed due to design issues, left for easier implementation in the future-->
@@ -988,12 +951,6 @@
         <img id="displayedHead" src="Graphics/head_luxidoor.svg" alt="" onclick="clickTribeBar()"/>
     </div>
     <div id="content" style="width: 100%; height: 100%">
-        <div id="sidebar" class="alignElementsReverseVertical" style="z-index: 1000">
-            <div class="alignElementsHorizontal">
-                <img id="swapSidebar" class="elementsInSideBar" src="Graphics/swap.svg" alt="" onclick="swapSidebar()"/>
-                <img id="copyText" class="elementsInSideBar" src="Graphics/copy.svg" alt="" onclick="copyText()"/>
-            </div>
-        </div>
         <div id="map">
             <div id="backgroundMap" style="width: 100%; height: 100%" onclick="closeResourceBar()"></div>
         </div>
