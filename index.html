@@ -13,11 +13,14 @@
     <script>
     /*code original from: https://stackoverflow.com/questions/3437786/get-the-size-of-the-screen-current-web-page-and-browser-window
                           https://stackoverflow.com/questions/2005954/center-a-positionfixed-element
-                          https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_menu_icon_js
+            
 
      */
     //list from https://polytopia.fandom.com/wiki/Terrain
     /* due to scaling issues thirdLayer contains animal/fruits, but is handled internally as two separate layers animalLayer and furitLayer*/
+    
+    //using 12x1 pixel transparent image (1x1px caused problems)
+    const onePixelImage =  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAABCAQAAABA4oeyAAAAC0lEQVR42mNkwAEAADIAAp8UnagAAAAASUVORK5CYII='; //Chrome based browsers cannot handle an empty src
 
     const tribeList = ["undefined", "xin-xi", "imperius", "bardur", "oumaji", "kickoo", "hoodrick", "luxidoor", "vengir", "zebasi", "ai-Mo", "quetzali", "yadakk", "aquarion", "elyrion", /*"polaris"*/]; //undefined is not a tribe
     const mainTerrain = ["ocean", "water", "field", "mountain"];
@@ -80,7 +83,7 @@
     });
 
     function resizeContent() {
-        let VHConstant = 7.5;//original vh number
+        const VHConstant = 7.5;//original vh number
         let VWConverted = VHConstant*$(window).height()/$(window).width();
         if(VWConverted > 1/8*100) { //if width is greater than the width of the resourceBar
             VWConverted = 1/8*100;
@@ -318,7 +321,7 @@
 
     }
 
-    function circleAndLabelContent(idForElement, element, label, /* functionToCall, valueOfFunctionCall */ ) {
+    function circleAndLabelContent(idForElement, element, label) {
         return  '<div    id="' + idForElement + '" class="contentPresenter alignElementsVertical"><svg>' +
                 '<circle id="' + idForElement + 'Circle" class="contentPresenterCircle" r="40%" cx="50%" cy="50%" stroke-width="2.5%" />' +
                 '<image  id="' + idForElement + 'Graphic" href="Graphics/' + element + '.svg" x="20%" y="20%"  width="60%" height="60%"></image></svg>' +
@@ -519,21 +522,21 @@
             let secondLayerDiv    = '<div id="secondLayer' + currentRow +'" style="position:absolute; display: flex; flex-direction: row; justify-content: center;">';
             let animalLayerDiv    = '<div id="animalLayer' + currentRow +'" style="position:absolute; display: flex; flex-direction: row; justify-content: center;">';
             let fruitLayerDiv     = '<div id="fruitLayer' + currentRow +'" style="position:absolute; display: flex; flex-direction: row; justify-content: center;">';
-            let selectTileDiv     = '<div id="selectTile' + currentRow +'" style="position:absolute; display: flex; flex-direction: row; justify-content: center;">';
+            let selectTileDiv     = '<div id="selectTile' + currentRow +'" style="color:green; position:absolute; display: flex; flex-direction: row; justify-content: center;">';
             let villageDiv        = '<div id="village' + currentRow +'" style="position:absolute; display: flex; flex-direction: row; justify-content: center;">';
             let ruinDiv           = '<div id="ruin' + currentRow +'" style="position:absolute; display: flex; flex-direction: row; justify-content: center;">';
 
             for(let x = 0; x < numberOfElementsInARow; x++) {
 
 
-                fieldDiv       += ( '<img id="field_'+ mapTileNumber +'" class="mapTile" src="" alt=""/>');
-                mountainDiv    += ( '<img  id="mountain_'+ mapTileNumber +'" class="mountainLayerImage" src="" alt="" />');
-                secondLayerDiv += ( '<img  id="secondLayer_'+ mapTileNumber +'" class="secondLayerImage" src="" alt="" />');
-                animalLayerDiv  += ( '<img  id="animalLayer_'+ mapTileNumber +'" class="animalLayerImage" src="" alt="" />');
-                fruitLayerDiv  += ( '<img  id="fruitLayer_'+ mapTileNumber +'" class="fruitLayerImage" src="" alt="" />');
-                selectTileDiv  += ( '<img  id="selectTile_'+ mapTileNumber +'" class="selectTileImage" src="" alt="" />');
-                villageDiv     += ( '<img  id="village_'+ mapTileNumber +'" class="villageImage" src="" alt="" />');
-                ruinDiv        += ( '<img  id="ruin_'+ mapTileNumber +'" class="ruinImage" src="" alt="" />');
+                fieldDiv       += ( '<img id="field_'+ mapTileNumber +'" class="mapTile" src="' + onePixelImage +'" alt=""/>');
+                mountainDiv    += ( '<img  id="mountain_'+ mapTileNumber +'" class="mountainLayerImage" src="' + onePixelImage +'" alt="" />');
+                secondLayerDiv += ( '<img  id="secondLayer_'+ mapTileNumber +'" class="secondLayerImage" src="' + onePixelImage +'" alt="" />');
+                animalLayerDiv += ( '<img  id="animalLayer_'+ mapTileNumber +'" class="animalLayerImage" src="' + onePixelImage +'" alt="" />');
+                fruitLayerDiv  += ( '<img  id="fruitLayer_'+ mapTileNumber +'" class="fruitLayerImage" src="' + onePixelImage +'" alt="" />');
+                selectTileDiv  += ( '<img  id="selectTile_'+ mapTileNumber +'" class="selectTileImage" src="' + onePixelImage +'" alt="" />');
+                villageDiv     += ( '<img  id="village_'+ mapTileNumber +'" class="villageImage" src="' + onePixelImage +'" alt="" />');
+                ruinDiv        += ( '<img  id="ruin_'+ mapTileNumber +'" class="ruinImage" src="' + onePixelImage + '" alt="" />');
                 mapTileNumber++;
             }
 
@@ -609,7 +612,8 @@
 
                 let svg = '<svg class="userInteractionSVG" ><polygon id="userInteraction_' + mapTileNumber + '" class="userInteractionArea" points=" 0,' + adjustedMapTileHeight/2 + ' ' + adjustedMapTileWidth/2 + ',' + adjustedMapTileHeight + ' ' + adjustedMapTileWidth + ',' + adjustedMapTileHeight/2  + ' ' + adjustedMapTileWidth/2 + ',' + 0 +' " style="fill: rgba(0,0,0,0.0)"></polygon>' +
                           '<polygon id="userInteractionTopLeft_' + y + '_' + numberOfElementsInARow + '_' + mapTileNumber + '" class="userInteractionAreaTopLeft" points="0 0,' + adjustedMapTileWidth/2 + ' 0,0 ' +  adjustedMapTileHeight/2 + '" style="fill: rgba(0,0,0,0.0)"></polygon>' +
-                          '<polygon id="userInteractionTopRight_' + y + '_' + numberOfElementsInARow + '_' + mapTileNumber + '" class="userInteractionAreaTopRight" points="' + adjustedMapTileWidth + ' 0,' + adjustedMapTileWidth/2 + ' 0,' + adjustedMapTileWidth + ' ' + adjustedMapTileHeight/2 + '" style="fill: rgba(0,0,0,0.0)"></polygon></svg>'; //bottom part of the polygon is overlapped by the top part of the svg, created triangles so the not active part can call the part it is covering
+                          '<polygon id="userInteractionTopRight_' + y + '_' + numberOfElementsInARow + '_' + mapTileNumber + '" class="userInteractionAreaTopRight" points="' + adjustedMapTileWidth + ' 0,' + adjustedMapTileWidth/2 + ' 0,' + adjustedMapTileWidth + ' ' + adjustedMapTileHeight/2 + '" style="fill: rgba(0,0,0,0.0)"></polygon></svg>'; 
+                          //bottom part of the polygon is overlapped by the top part of the svg, created triangles so the not active part can call the part it is covering
                 userInteractionDiv += (svg);
                 mapTileNumber++;
             }
@@ -717,7 +721,7 @@
             if(toSelect)
                 $("#selectTile_" + toSelectTile).attr("src", "Graphics/selectTile.svg");
             else
-                $("#selectTile_" + toSelectTile).attr("src", "");
+                $("#selectTile_" + toSelectTile).attr("src", onePixelImage);
 
         }
     }
@@ -737,16 +741,16 @@
         let village = $("#village_" + id);
         let ruin = $("#ruin_" + id);
 
-        mountainLayer.attr("src", "");
-        secondLayer.attr("src", "");
-        animalLayer.attr("src", "");
-        fruitLayer.attr("src", "");
-        selectTile.attr("src", "");
-        village.attr("src", "");
-        ruin.attr("src", "");
+        mountainLayer.attr("src", onePixelImage);
+        secondLayer.attr("src", onePixelImage);
+        animalLayer.attr("src", onePixelImage);
+        fruitLayer.attr("src", onePixelImage);
+        selectTile.attr("src", onePixelImage);
+        village.attr("src", onePixelImage);
+        ruin.attr("src", onePixelImage);
 
 
-        if(villageExists) { //there can not be a second-/thirdLayer
+        if(villageExists) { //there cannot be a second-/thirdLayer
             secondLayerCode = -1;
             thirdLayerCode = -1;
             village.attr("src", "Graphics/village.svg");
@@ -857,7 +861,7 @@
 
     function closeResourceBar() {
         if(currentSelectedTile[0] > -1) //remove last selectTile
-            $("#selectTile_" + currentSelectedTile[0]).attr("src", "");
+            $("#selectTile_" + currentSelectedTile[0]).attr("src", onePixelImage);
         resourceBarActive = false;
         $("#resourceBar").slideUp("fast");
 
