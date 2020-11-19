@@ -336,6 +336,7 @@
                     $("#"+ tribeList[currentTribe] + "_headCircle").css({fill: "rgb(0, 153, 255)",stroke: "white"}); //change color of circle back to normal
                     currentTribe = i;
                     changeGraphicsForSelectedTribe();
+                    closeTribeBar();
                     break;
                 }
             }
@@ -875,9 +876,13 @@
         resourceBarActive = true;
         $("#resourceBar").slideDown("fast");
         $("#mainTerrainDiv").show();
-
-
     }
+
+    function closeInputBars() {
+        closeResourceBar();
+        closeTribeBar();
+    }
+    
 
     function changeInput() {
         let input= $("#mainInput");
@@ -956,7 +961,7 @@
     </div>
     <div id="content" style="width: 100%; height: 100%">
         <div id="map">
-            <div id="backgroundMap" style="width: 100%; height: 100%" onclick="closeResourceBar()"></div>
+            <div id="backgroundMap" style="width: 100%; height: 100%" onclick="closeInputBars()"></div>
         </div>
         <div id="tribeBar"></div>
         <div id="resourceBar" class="alignElementsVertical">
